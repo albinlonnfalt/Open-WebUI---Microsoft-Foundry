@@ -6,7 +6,7 @@ This repository contains a pipe function that lets Open WebUI surface agents and
 
 - Create a Microsoft Entra app registration and give it the **AI User** RBAC role on the Foundry resource.
 - Provide the generated tenant ID, client ID, and client secret as environment variables or configuration fields so the pipe can authenticate to Foundry.
-- Set the `BASE_URL` valve to point at your Foundry project's OpenAI endpoint.
+- Set the `BASE_URL` valve to point at your Foundry project's endpoint.
 
 ## Registering Agents
 
