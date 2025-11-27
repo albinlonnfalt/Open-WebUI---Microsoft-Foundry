@@ -70,11 +70,12 @@ class Pipe:
             #instructions=transformed_messsage_array["instructions"], #Instructions not supported if using agent_reference
             input=transformed_messsage_array["input"],
             stream=False,
+            tool_choice="auto",
         )
 
         # END STEP 3
 
-        return result.output[0].content[0].text
+        return result.output[0].content
 
 
 def transform_chat_messages_to_responses_api_format(messages):
