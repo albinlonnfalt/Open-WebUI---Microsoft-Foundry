@@ -3,6 +3,10 @@ import openai
 
 from pydantic import BaseModel, Field
 
+# Simple module-level cache to avoid rebuilding OpenAI clients on every request.
+_CLIENT_CACHE = None
+_CLIENT_CACHE_KEY = None
+
 class Pipe:
     class Valves(BaseModel):
         TENANT_ID: str = Field(
@@ -38,26 +42,8 @@ class Pipe:
 
     def pipe(self, body: dict):
 
-        # STEP 1: Setup OpenAI client with Azure AD authentication
-        credential = ClientSecretCredential(
-            tenant_id=self.valves.TENANT_ID,
-            client_id=self.valves.CLIENT_ID,
-            client_secret=self.valves.CLIENT_SECRET,
-        )
-
-        token_provider = get_bearer_token_provider(
-            credential,
-            "https://ai.azure.com/.default",
-        )
-
-        base_url = self.valves.BASE_URL.rstrip("/")
-        input_url = f"{base_url}/openai"
-
-        openai_client = openai.OpenAI(
-            api_key=token_provider,
-            base_url=input_url,
-            default_query={"api-version": "2025-11-15-preview"},
-        )
+        # STEP 1: Setup (and cache) OpenAI client with Azure AD authentication
+        openai_client = get_client(self.valves)
 
         # END STEP 1
 
@@ -189,3 +175,42 @@ def transform_chat_messages_to_responses_api_format(messages):
         output.append({"role": role, "content": converted})
 
     return {"instructions": instructions, "input": output}
+
+
+def get_client(valves: Pipe.Valves):
+    global _CLIENT_CACHE, _CLIENT_CACHE_KEY
+
+    base_url = valves.BASE_URL.rstrip("/")
+    cache_key = (
+        valves.TENANT_ID,
+        valves.CLIENT_ID,
+        valves.CLIENT_SECRET,
+        base_url,
+    )
+
+    if _CLIENT_CACHE is not None and _CLIENT_CACHE_KEY == cache_key:
+        return _CLIENT_CACHE
+
+    credential = ClientSecretCredential(
+        tenant_id=valves.TENANT_ID,
+        client_id=valves.CLIENT_ID,
+        client_secret=valves.CLIENT_SECRET,
+    )
+
+    token_provider = get_bearer_token_provider(
+        credential,
+        "https://ai.azure.com/.default",
+    )
+
+    input_url = f"{base_url}/openai"
+
+    openai_client = openai.OpenAI(
+        api_key=token_provider,
+        base_url=input_url,
+        default_query={"api-version": "2025-11-15-preview"},
+    )
+
+    _CLIENT_CACHE = openai_client
+    _CLIENT_CACHE_KEY = cache_key
+
+    return openai_client
