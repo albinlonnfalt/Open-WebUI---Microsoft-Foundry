@@ -22,3 +22,4 @@ Currently the following functionality is not supported:
 - Code interpreter
 - Image input
 - Tool use not configured in the agent
+- Build in citations from completion API
