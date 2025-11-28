@@ -69,13 +69,16 @@ class Pipe:
             },
             #instructions=transformed_messsage_array["instructions"], #Instructions not supported if using agent_reference
             input=transformed_messsage_array["input"],
-            stream=False,
+            stream=True,
             tool_choice="auto",
         )
 
         # END STEP 3
 
-        return result.output[0].content
+        # STEP 4: Stream the output deltas back to the caller
+        for event in result:
+            if event.type == 'response.output_text.delta':
+                yield event.delta
 
 
 def transform_chat_messages_to_responses_api_format(messages):
