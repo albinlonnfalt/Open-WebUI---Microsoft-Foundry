@@ -16,3 +16,9 @@ Add each agent name you want to expose as a separate entry in the `pipes` method
 
 - The pipe currently only supports the bare-minimum flow (authenticate, transform chat history, call Responses API with agent references). Enhancements such as streaming, richer input types, or retries are not yet implemented.
 - Treat this code as a starting point for more advanced agent/workflow integrations with Foundry.
+
+## Limitations
+Currently the following functionality is not supported:
+- Code interpreter
+- Image input
+- Tool use not configured in the agent
